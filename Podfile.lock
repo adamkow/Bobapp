@@ -1,0 +1,24 @@
+PODS:
+  - DropDown (2.3.13)
+  - IQKeyboardManagerSwift (6.5.10)
+  - SwiftyJSON (4.3.0)
+
+DEPENDENCIES:
+  - DropDown
+  - IQKeyboardManagerSwift
+  - SwiftyJSON (~> 4.0)
+
+SPEC REPOS:
+  trunk:
+    - DropDown
+    - IQKeyboardManagerSwift
+    - SwiftyJSON
+
+SPEC CHECKSUMS:
+  DropDown: 8a2116376c1981888557f72ec2ffc9a5e0e456ec
+  IQKeyboardManagerSwift: 52962c76ab33532f15ad9f3ff4e5715eda5335bb
+  SwiftyJSON: 6faa0040f8b59dead0ee07436cbf76b73c08fd08
+
+PODFILE CHECKSUM: a6abb25bff6d16ad1eff5e629a3b348a498b1899
+
+COCOAPODS: 1.11.3

@@ -1,0 +1,656 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "42bbe3ab",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+    "from sklearn.metrics.pairwise import cosine_similarity\n",
+    "\n",
+    "df = pd.read_csv(\"starbucks-menu-nutrition-drinks.csv\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "76c0a72c",
+   "metadata": {},
+   "source": [
+    ""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "13ce01d8",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 177 entries, 0 to 176\n",
+      "Data columns (total 7 columns):\n",
+      " #   Column     Non-Null Count  Dtype \n",
+      "---  ------     --------------  ----- \n",
+      " 0   Beverage   177 non-null    object\n",
+      " 1   Calories   177 non-null    object\n",
+      " 2   Fat (g)    177 non-null    object\n",
+      " 3   Carb. (g)  177 non-null    object\n",
+      " 4   Fiber (g)  177 non-null    object\n",
+      " 5   Protein    177 non-null    object\n",
+      " 6   Sodium     177 non-null    object\n",
+      "dtypes: object(7)\n",
+      "memory usage: 9.8+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "df.info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1930b69a",
+   "metadata": {},
+   "source": [
+    "It returns the following information:\n",
+    "\n",
+    ""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "ddc9528d",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['Beverage', 'Calories', 'Fat (g)', 'Carb. (g)', 'Fiber (g)', 'Protein',\n",
+       "       'Sodium'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.columns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d2ade783",
+   "metadata": {},
+   "source": [
+    "This prints a list of all the column names in the DataFrame."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "0da873c9",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Beverage</th>\n",
+       "      <th>Calories</th>\n",
+       "      <th>Fat (g)</th>\n",
+       "      <th>Carb. (g)</th>\n",
+       "      <th>Fiber (g)</th>\n",
+       "      <th>Protein</th>\n",
+       "      <th>Sodium</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>Cool Lime</td>\n",
+       "      <td>45</td>\n",
+       "      <td>0</td>\n",
+       "      <td>11</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>Pink Drink</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>Pink Drink</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "      <td>-</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>Strawberry Acai</td>\n",
+       "      <td>80</td>\n",
+       "      <td>0</td>\n",
+       "      <td>18</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>Very Berry Hibiscus</td>\n",
+       "      <td>60</td>\n",
+       "      <td>0</td>\n",
+       "      <td>14</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>10</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "              Beverage Calories Fat (g) Carb. (g) Fiber (g) Protein Sodium\n",
+       "0            Cool Lime       45       0        11         0       0     10\n",
+       "1           Pink Drink        -       -         -         -       -      -\n",
+       "2           Pink Drink        -       -         -         -       -      -\n",
+       "3      Strawberry Acai       80       0        18         1       0     10\n",
+       "4  Very Berry Hibiscus       60       0        14         1       0     10"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head(5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "898cf333",
+   "metadata": {},
+   "source": [
+    "This prints the first 5 rows of the DataFrame."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "fd9c6dda",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = df.replace('-', 0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a3043b64",
+   "metadata": {},
+   "source": [
+    "This will replace all the '-' values in the DataFrame with 0."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "5e787f83",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df['Calories'] = df['Calories'].astype(float)\n",
+    "df['Fat (g)'] = df['Fat (g)'].astype(float)\n",
+    "df['Carb. (g)'] = df['Carb. (g)'].astype(float)\n",
+    "df['Fiber (g)'] = df['Fiber (g)'].astype(float)\n",
+    "df['Protein'] = df['Protein'].astype(float)\n",
+    "df['Sodium'] = df['Sodium'].astype(float)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b3f2843f",
+   "metadata": {},
+   "source": [
+    "This will convert the data type of each column to float."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "090ab586",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# select only the numeric columns using select_dtypes()\n",
+    "numeric_cols = df.select_dtypes(include=['float64', 'int64'])\n",
+    "\n",
+    "# fill missing values in numeric columns with the mean using fillna()\n",
+    "numeric_cols = numeric_cols.fillna(numeric_cols.mean())\n",
+    "\n",
+    "# replace the original numeric columns with the filled columns in the original DataFrame\n",
+    "df[numeric_cols.columns] = numeric_cols"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "321e5c95",
+   "metadata": {},
+   "source": [
+    "This will fill the missing values in the numeric columns with the mean and replace the original numeric columns with the filled columns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "b3fc15e0",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['Beverage', 'Calories', 'Fat (g)', 'Carb. (g)', 'Fiber (g)', 'Protein',\n",
+       "       'Sodium'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.columns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cc376fe6",
+   "metadata": {},
+   "source": [
+    "returns a list of the column names in the DataFrame"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "847cd209",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Calories'] != 0]['Calories'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Calories'] = df['Calories'].replace(0, mean_value)\n",
+    "\n",
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Fat (g)'] != 0]['Fat (g)'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Fat (g)'] = df['Fat (g)'].replace(0, mean_value)\n",
+    "\n",
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Carb. (g)'] != 0]['Carb. (g)'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Carb. (g)'] = df['Carb. (g)'].replace(0, mean_value)\n",
+    "\n",
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Fiber (g)'] != 0]['Fiber (g)'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Fiber (g)'] = df['Fiber (g)'].replace(0, mean_value)\n",
+    "\n",
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Protein'] != 0]['Protein'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Protein'] = df['Protein'].replace(0, mean_value)\n",
+    "\n",
+    "# calculate the mean of non-zero values\n",
+    "mean_value = df[df['Sodium'] != 0]['Sodium'].mean()\n",
+    "\n",
+    "# replace 0 values with the mean using replace()\n",
+    "df['Sodium'] = df['Sodium'].replace(0, mean_value)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "93ced414",
+   "metadata": {},
+   "source": [
+    "This code replaces 0 values with the mean value of non-zero values in each respective column."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "202a8643",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(177, 7)"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "55362510",
+   "metadata": {},
+   "source": [
+    "This returns a tuple where the first element is the number of rows and the second element is the number of columns in the DataFrame."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "3b9c6060",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df.drop_duplicates(inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "58cf0ead",
+   "metadata": {},
+   "source": [
+    "This code will drop any duplicate rows in the DataFrame and modify the DataFrame in place."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "9be28ab2",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(154, 7)"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "53382ebb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create feature vector for each drink\n",
+    "tfidf = TfidfVectorizer(stop_words='english')\n",
+    "drink_matrix = tfidf.fit_transform(df['Beverage'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "48bcc2f5",
+   "metadata": {},
+   "source": [
+    "We are using the TfidfVectorizer class from the scikit-learn library to create a feature vector for each drink in the \"Beverage\" column of the pandas DataFrame \"df\".\n",
+    "\n",
+    "The TfidfVectorizer class converts the collection of text (in this case, the names of the drinks) into a matrix of numerical values. It applies a technique called term frequency-inverse document frequency (TF-IDF), which weights each term (word) in each document (drink name) based on how often it appears in the document and how frequently it appears in the entire collection of documents (all the drink names).\n",
+    "\n",
+    "The stop_words parameter is set to 'english', which means that common English words like \"the\", \"and\", and \"is\" are removed from the text before the vectorization process.\n",
+    "\n",
+    "The resulting matrix (drink_matrix) is a sparse matrix, meaning that most of the values in the matrix are 0. This is because each drink name only contains a small subset of the possible words in the English language, and therefore most of the values in the matrix are 0."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "2cdca167",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def recommend_drinks(inputs, n=3):\n",
+    "    # Create feature vector for input drinks\n",
+    "    input_matrix = tfidf.transform(inputs)\n",
+    "\n",
+    "    # Compute cosine similarity between input drinks and all other drinks\n",
+    "    similarities = cosine_similarity(input_matrix, drink_matrix)\n",
+    "\n",
+    "    # Get indices of top n recommended drinks\n",
+    "    indices = similarities.argsort()[0][::-1][:n]\n",
+    "\n",
+    "    # Exclude input drinks from the list of recommended drinks\n",
+    "    recommended_drinks = [df.iloc[idx]['Beverage'] for idx in indices if df.iloc[idx]['Beverage'] not in inputs]\n",
+    "\n",
+    "    # Return recommended drink names\n",
+    "    return recommended_drinks"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9654451c",
+   "metadata": {},
+   "source": [
+    "This function takes in a list of input drinks and the number of recommended drinks to return (default value is 3). It uses the tfidf object and the drink_matrix created earlier to calculate cosine similarity between the input drinks and all other drinks in the dataset.\n",
+    "\n",
+    "The similarity scores are sorted in descending order and the indices of the top n drinks with the highest similarity scores are retrieved.\n",
+    "\n",
+    "Then, the function excludes the input drinks from the list of recommended drinks to ensure that the recommended drinks are different from the input drinks. Finally, it returns the names of the recommended drinks as a list."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "b97f3509",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['Cool Lime', 'Pink Drink', 'Strawberry Acai',\n",
+       "       'Very Berry Hibiscus', 'Violet Drink', 'Apple Berry Juice',\n",
+       "       'Defense Up', 'Organic Ginger Limeade', 'Iced Coffee',\n",
+       "       'Iced Coffee with Milk', 'Vanilla Latte', 'Caffe Mocha',\n",
+       "       'Caramel Macchiato', 'Caramel Iced Coffee', 'Iced Coffee + Milk',\n",
+       "       'Low Calorie Iced Coffee + Milk', 'Vanilla Iced Coffee',\n",
+       "       'Shaken Sweet Tea', 'Berry Blossom White', 'Black Mango',\n",
+       "       'Black with Lemon', 'Brambleberry', 'Giant Peach', 'Iced Passion',\n",
+       "       'Lemon Ginger', 'Organic Black Lemonade', 'Organic Iced Black Tea',\n",
+       "       'Organic Iced Green Tea', 'Plum Pomegranate', 'Tazoberry',\n",
+       "       'White Cranberry', 'Shaken Iced Black Tea',\n",
+       "       'Shaken Iced Black Tea Lemonade', 'Shaken Iced Green Tea',\n",
+       "       'Shaken Iced Green Tea Lemonade', 'Shaken Iced Passion Tango™ Tea',\n",
+       "       'Shaken Iced Passion Tango™ Tea Lemonade',\n",
+       "       'Shaken Iced Peach Green Tea', 'Skinny Caramel Macchiato',\n",
+       "       'Skinny Vanilla Latte', 'Energy Coffee Drink',\n",
+       "       'Energy Mexican Mocha', 'Energy Mocha Drink',\n",
+       "       'Energy Vanilla Drink', 'Energy White Chocolate Drink',\n",
+       "       'Energy+Cinnamon Dolce Drink', 'Espresso Cubano', 'Espresso Drink',\n",
+       "       'Espresso Salted Caramel Cream', 'Light Espresso Drink',\n",
+       "       'Protein Caramel', 'Raspberry Pomegranate', 'Strawberry Lemonade',\n",
+       "       'Caramel Coffee Drink', 'Coffee Drink',\n",
+       "       'Cold Brew Black, Unsweetened',\n",
+       "       'Cold Brew Cocoa and Honey with Cream',\n",
+       "       'Dulce de Leche Coffee Drink', 'Mocha Coffee Drink',\n",
+       "       'Mocha Light Coffee Drink', \"S'mores Coffee Drink\",\n",
+       "       'Vanilla  Coffee Drink', 'Vanilla Light  Coffee Drink',\n",
+       "       'Doubleshot Protein Dark Chocolate', 'Doubleshot Protein Vanilla',\n",
+       "       'Iced Coffee Caramel', 'Iced Coffee Light Sweetened',\n",
+       "       'Iced Coffee Unsweetened',\n",
+       "       'Black Cherry Limeade with Coconut Water', 'Mango Black Tea',\n",
+       "       'Herbal Tea', 'Peach Green Tea',\n",
+       "       'White Chocolate Mocha Frappuccino', 'Blonde Roast', 'Misto',\n",
+       "       'Brewed Coffee', 'Coffee Traveler', 'Decaf Pike Roast',\n",
+       "       'Featured Dark Roast', '70 Cold Brew', '70 Cold Brew with Milk',\n",
+       "       'Nitro Cold Brew', 'Nitro Cold Brew with Sweet Cream',\n",
+       "       'Pike Roast', 'Toasted Coconut Cold Brew',\n",
+       "       'Vanilla Sweet Cream Cold Brew', 'Hot Chocolate',\n",
+       "       'Signature Hot Chocolate', 'Americano', 'Latte', 'Mocha',\n",
+       "       'Cappuccino', 'Cascara Coconutmilk Latte', 'Cinnamon Dolce Latte',\n",
+       "       'Coconutmilk Mocha Macchiato', 'Espresso', 'Espresso Con Panna',\n",
+       "       'Espresso Macchiato', 'Flat White', 'Iced Americano', 'Iced Latte',\n",
+       "       'Iced Mocha', 'Iced Caramel Macchiato',\n",
+       "       'Iced Cascara Coconutmilk Latte', 'Iced Cinnamon Dolce Latte',\n",
+       "       'Iced Coconutmilk Mocha Macchiato',\n",
+       "       'Iced Skinny Cinnamon Dolce Latte', 'Iced Skinny Mocha',\n",
+       "       'Iced Vanilla Latte', 'Iced White Chocolate Mocha',\n",
+       "       'Latte Macchiato', 'Skinny Mocha', 'on Ice Beverage',\n",
+       "       'White Chocolate Mocha', 'Vanilla Blended Coffee',\n",
+       "       'Vanilla Light Blended Coffee',\n",
+       "       'Caramel Cocoa Cluster Blended Coffee', 'Caramel Blended Coffee',\n",
+       "       'Caramel Light Blended Coffee', 'Chai Blended',\n",
+       "       'Cinnamon Dolce Blended Coffee',\n",
+       "       'Cinnamon Dolce Light Blended Coffee',\n",
+       "       'Cinnamon Roll Blended Coffee', 'Blended Coffee',\n",
+       "       'Coffee Light Blended Coffee', 'Cupcake Blended ',\n",
+       "       'Green Tea Blended', 'Java Chip Blended Coffee',\n",
+       "       'Java Chip Light Blended Coffee', 'Lemon Bar Blended',\n",
+       "       'Midnight Mint Mocha Blended Coffee',\n",
+       "       'Midnight Mint Mocha Blended', 'Mocha Blended Coffee',\n",
+       "       'Mocha Light Blended Coffee', 'Oprah Cinnamon Chai Blended',\n",
+       "       'Red Velvet Cake Blended', \"S'mores Blended Coffee\",\n",
+       "       \"S'mores Blended\", 'Strawberries & Blended', 'GO Blended Beverage',\n",
+       "       'Vanilla Bean Blended', 'White Chocolate Mocha Blended Coffee',\n",
+       "       'Cinnamon Dolce', 'Organic Chocolate Milk Box',\n",
+       "       'Steamed Apple Juice', 'Vanilla', 'Chocolate Smoothie',\n",
+       "       'Strawberry Smoothie', 'Ginger Ale', 'Lemon Ale',\n",
+       "       'Orange Cream Soda'], dtype=object)"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.Beverage.unique()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cb73dced",
+   "metadata": {},
+   "source": [
+    "It returns an array of unique values that appear in the 'Beverage' column. Each element of the array represents a unique drink name in the column."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "4a74856b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "How many drinks do you want to recommend? 3\n",
+      "Enter a drink name: Lemon Ale\n",
+      "Enter a drink name: Steamed Apple Juice\n",
+      "Enter a drink name: Blended Coffee\n",
+      "['Ginger Ale', 'Black with Lemon']\n"
+     ]
+    }
+   ],
+   "source": [
+    "inputs = []\n",
+    "num_inputs = int(input(\"How many drinks do you want to recommend? \"))\n",
+    "for i in range(num_inputs):\n",
+    "    drink = input(\"Enter a drink name: \")\n",
+    "    inputs.append(drink)\n",
+    "\n",
+    "recommended_drinks = recommend_drinks(inputs)\n",
+    "print(recommended_drinks)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9891943d",
+   "metadata": {},
+   "source": [
+    "Prompt the user to input the number of drinks they want to recommend and the names of those drinks. The recommend_drinks function would then take in those drink names as input, create feature vectors for those drinks using the TfidfVectorizer, calculate cosine similarity between the input drinks and all other drinks in the dataset, and return the top n recommended drinks based on their similarity to the input drinks."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e088c3ab",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.15"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
