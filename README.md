@@ -4,6 +4,9 @@
 
 [Full documentation](https://docs.google.com/document/d/1SAamI1Y-51nXc3aQ5qwmjJZmd_ukVqji5M0G3OMSzKk/edit?usp=sharing)
 
+![bobapp](https://github.com/adamkow/Bobapp/assets/35881932/6b5b2713-36b0-4fcf-917e-8d4e099015e2)
+
+
 ## Getting Started:
 
 ### Cloning the Repository:
